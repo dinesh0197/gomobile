@@ -20,7 +20,7 @@ app.disable("x-powered-by");
 var multer = require("multer");
 var forms = multer();
 
-var bodyParser = require("body-parser");
+// var bodyParser = require("body-parser");
 const orderRouter = require("./routes/order-router");
 const User = require("./model/user-model");
 app.use(cors());
@@ -70,22 +70,22 @@ app.use(globalErrorController);
 
 module.exports = app;
 
-// (async ()=>{
-//   await User.create({
-//    email: "kash@yopmail.com",
-//    password: "kash@yopmail.com",
-//    franchise_code: "12345",
-//    operating_name: "123",
-//    legal_name: "legal_name",
-//    phone: "7788654387",
-//    address: "address",
-//    city: "city",
-//    state: "state",
-//    country: "country",
-//    zipcode: "zipcode",
-//    role:  "Admin", // Default role if none provided
-//    created_by: "system", // Adjust as necessary
-//    createdAt: new Date(),
-//    updatedAt: new Date(),
-//  });
-// })()
+(async ()=>{
+  await User.create({
+   email: "kash@yopmail.com",
+   password: "kash@yopmail.com",
+   franchise_code: "12345",
+   operating_name: "123",
+   legal_name: "legal_name",
+   phone: "7788654387",
+   address: "address",
+   city: "city",
+   state: "state",
+   country: "country",
+   zipcode: "zipcode",
+   role:  "Admin", // Default role if none provided
+   created_by: "system", // Adjust as necessary
+   createdAt: new Date(),
+   updatedAt: new Date(),
+ });
+})()
