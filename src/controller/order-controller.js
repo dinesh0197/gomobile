@@ -12,6 +12,8 @@ const ShippingLabel = require("../model/shipping-label-model");
 
 const { getCommonValuesFromObject } = require("../helper/constants");
 const { excludeAudits } = require("../helper/sequelize");
+const User = require("../model/user-model");
+const { UploadShippingLabelNotification } = require("../helper/send-email");
 
 const orderColNames = [
   "id",
@@ -709,7 +711,7 @@ const updateSpecialRequest = catchAsync(async (req, res) => {
 const updateShippingLabel = catchAsync(async (req, res) => {
   try {
     const { id } = req.params;
-    const { filename } = req.file || {}; 
+    const { filename } = req.file || {};
     const { requestComment = "" } = req.body;
 
     if (!filename) {
@@ -722,7 +724,6 @@ const updateShippingLabel = catchAsync(async (req, res) => {
       where: {
         internalOrderId: id,
       },
-      attributes: ["id"],
     });
 
     if (!orderData) {
@@ -743,6 +744,21 @@ const updateShippingLabel = catchAsync(async (req, res) => {
     );
 
     if (updatedRows > 0) {
+      const user = await User.findOne({
+        where: { id: orderData.assignedFranchiseId },
+      });
+
+      const adminUsers = await User.findAll({ where: { role: "Admin" } });
+
+      const adminEmails = adminUsers.map((user) => user.email);
+
+      console.log({ data: [...adminEmails, user.email], filename });
+
+      UploadShippingLabelNotification(
+        [...adminEmails, user.email],
+        orderData,
+        filename
+      );
       return res.status(200).json({
         message: "Shipping label updated successfully",
       });

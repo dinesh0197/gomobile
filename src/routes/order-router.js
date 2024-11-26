@@ -28,9 +28,9 @@ orderRouter.put("/update/:id", updateOrder);
 
 orderRouter.get("/status/:id", getOrderStatus);
 
-orderRouter.get("/specialRequest/:id", updateSpecialRequest);
+orderRouter.patch("/specialRequest/:id", updateSpecialRequest);
 
-orderRouter.get(
+orderRouter.patch(
   "/shippingLabel/:id",
   upload.single("invoice"),
   updateShippingLabel

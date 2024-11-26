@@ -104,12 +104,16 @@ Order.belongsTo(User, {
 
 Order.afterCreate(async (order, options) => {
   try {
-    const adminUsers = await User.findAll({ where: { role: "admin" } });
+    const userEmail = await User.findOne({
+      where: { id: order.assignedFranchiseId },
+    });
+
+    const adminUsers = await User.findAll({ where: { role: "Admin" } });
 
     if (adminUsers.length > 0) {
       const adminEmails = adminUsers.map((user) => user.email);
 
-      NewOrderCreatedNotification(adminEmails, order);
+      NewOrderCreatedNotification([...adminEmails, userEmail.email], order);
       console.log("Admin notification email sent successfully!");
     }
   } catch (error) {
@@ -138,12 +142,10 @@ Order.beforeUpdate(async (order, options) => {
     }
 
     if (order.status === "Cancelled") {
-      console.log("testing");
-
       const newFranchise = await User.findOne({
         where: { id: order.assignedFranchiseId },
       });
-      const adminUsers = await User.findAll({ where: { role: "admin" } });
+      const adminUsers = await User.findAll({ where: { role: "Admin" } });
 
       if (adminUsers.length > 0) {
         const adminEmails = adminUsers.map((user) => user.email);
@@ -162,7 +164,7 @@ Order.beforeUpdate(async (order, options) => {
     }
 
     if (order.requestedShippingLabel) {
-      const adminUsers = await User.findAll({ where: { role: "admin" } });
+      const adminUsers = await User.findAll({ where: { role: "Admin" } });
 
       if (adminUsers.length > 0) {
         const adminEmails = adminUsers.map((user) => user.email);

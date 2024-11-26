@@ -123,50 +123,18 @@ exports.OrderCancelledNotification = (emails, order, action, recipientType) => {
   });
 };
 
-exports.UploadShippingLabelNotification = (emails, order, recipientType) => {
-  const subject = `Shipping Label Uploaded: ${order.internalOrderId}`;
+exports.UploadShippingLabelNotification = (email, order, filename) => {
+  const subject = `Shipping Label Updated: ${order.internalOrderId}`;
+  const body = `The shipping label for your order has been updated.\n\nOrder Details:\n
+      ID: ${order.internalOrderId}\n
+      Customer Order Number: ${order.customerOrderNumber}\n
+      Order Total: ${order.orderTotal}\n
+      Status: ${order.status}\n\n
+      Shipping Label:\n
+      filename: ${filename}\n\n
+      Please log in to the system to view or download the shipping label.`;
 
-  // Admin email body
-  const adminBody = `
-    Hello,
-
-    A shipping label has been uploaded for the following order:
-
-    Order ID: ${order.internalOrderId}
-    Customer Order Number: ${order.customerOrderNumber}
-    Order Total: ${order.orderTotal}
-    Status: ${order.status}
-
-    Please review the uploaded shipping label and take the necessary actions.
-
-    Best regards,
-    [Your Company Name]
-  `;
-
-  // User email body
-  const userBody = `
-    Hello,
-
-    Your shipping label has been uploaded for the following order:
-
-    Order ID: ${order.internalOrderId}
-    Customer Order Number: ${order.customerOrderNumber}
-    Order Total: ${order.orderTotal}
-    Status: ${order.status}
-
-    You can now proceed with the shipment based on the uploaded label.
-
-    Best regards,
-    [Your Company Name]
-  `;
-
-  // Determine which email body to send
-  const body = recipientType === "admin" ? adminBody : userBody;
-
-  // Send email to all recipients
-  emails.forEach((email) => {
-    this.sendEmail(email, body, subject);
-  });
+  return this.sendEmail(email, body, subject);
 };
 
 exports.RequestShippingLabelNotification = (emails, order) => {
