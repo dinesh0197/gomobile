@@ -189,12 +189,10 @@ exports.getRoleBasedUserLists = catchAsync(async (req, res) => {
 exports.dashBoardDetail = catchAsync(async (req, res) => {
   const { role, id } = req.userInfo || {};
   let filter = {};
-
   
   if (role === "User") {
     filter.assignedFranchiseId = id;
   }
-  console.log({ first: filter });
 
   const user = await User.count({ where: filter });
   const order = await Order.count({ where: filter });
