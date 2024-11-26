@@ -190,22 +190,24 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
   const { role, id } = req.userInfo || {};
   let filter = {};
 
+  
   if (role === "User") {
     filter.assignedFranchiseId = id;
   }
+  console.log({ first: filter });
 
-  const user = await User.findAndCountAll({ where: filter });
-  const order = await Order.findAndCountAll({ where: filter });
-  const pendingOrders = await Order.findAndCountAll({
+  const user = await User.count({ where: filter });
+  const order = await Order.count({ where: filter });
+  const pendingOrders = await Order.count({
     where: {
       ...filter,
       status: "Pending",
     },
   });
 
-  const shippedOrders = await Order.findAndCountAll({
+  const shippedOrders = await Order.count({
     where: {
-      filter,
+      ...filter,
       status: "Shipped",
     },
   });
@@ -215,10 +217,10 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
       "Success",
       {
         data: {
-          userCount: user.count,
-          orderCount: order.count,
-          pendingOrderCount: pendingOrders.count,
-          shippedOrderCount: shippedOrders.count,
+          userCount: user,
+          orderCount: order,
+          pendingOrderCount: pendingOrders,
+          shippedOrderCount: shippedOrders,
         },
       },
       res.statusCode
