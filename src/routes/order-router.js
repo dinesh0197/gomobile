@@ -12,6 +12,7 @@ const {
   deleteOrder,
   getOrderByZipcode,
   getOrderById,
+  getOrderStatus,
 } = require("../controller/order-controller");
 const { authenticateUser } = require("../jwtStrategy/JwtStrategy");
 
@@ -22,5 +23,7 @@ orderRouter.get("/:id", authenticateUser, getOrderById);
 
 orderRouter.post("/create", createNewOrder);
 orderRouter.put("/update/:id", updateOrder);
+
+orderRouter.get("/status/:id", getOrderStatus);
 
 module.exports = orderRouter;

@@ -194,7 +194,7 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
     filter.assignedFranchiseId = id;
   }
 
-  const user = await User.count({ where: filter });
+  const user = await User.count();
   const order = await Order.count({ where: filter });
   const pendingOrders = await Order.count({
     where: {

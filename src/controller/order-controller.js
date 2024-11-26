@@ -263,7 +263,6 @@ const getAllOrderList = catchAsync(async (req, res) => {
     const { role, id } = req.userInfo || {};
     let filter = {};
 
-
     if (role === "User") {
       filter.assignedFranchiseId = id;
     }
@@ -291,7 +290,7 @@ const getAllOrderList = catchAsync(async (req, res) => {
     // Fetch paginated orders
     orderData = await Order.findAll({
       where: whereConditions,
-      order: [['createdAt', 'DESC']],
+      order: [["createdAt", "DESC"]],
       limit,
       offset,
     });
@@ -312,7 +311,9 @@ const getAllOrderList = catchAsync(async (req, res) => {
       )
     );
   } catch (err) {
-    return res.status(500).json({ message: "Internal Server Error", details: err.message });
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", details: err.message });
   }
 });
 
@@ -603,4 +604,79 @@ const updateOrder = catchAsync(async (req, res) => {
   }
 });
 
-module.exports = { createNewOrder, updateOrder, getOrderById, getAllOrderList };
+const getOrderStatus = catchAsync(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const orderData = await Order.findOne({
+      where: {
+        internalOrderId: id,
+      },
+      attributes: { exclude: excludeAudits },
+    });
+
+    console.log({ orderData });
+
+    if (!orderData) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const shippingAddresses = await ShippingAddress.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+    const billingAddress = await BillingAddress.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+
+    const productItem = await ProductItem.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+    const serviceItem = await ServiceItem.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+    const shippingLabel = await ShippingLabel.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+    const vehicleInfo = await VehicleInfo.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+
+    const warehouseAddresses = await WarehouseAddress.findAll({
+      where: { orderId: id },
+      attributes: { exclude: excludeAudits },
+    });
+
+    const orderInfo = {
+      ...orderData.dataValues,
+      shippingAddresses,
+      billingAddress,
+      productItem,
+      serviceItem,
+      shippingLabel,
+      vehicleInfo,
+      warehouseAddresses,
+    };
+    return res.status(200).json({
+      message: "Order fetched successfully",
+      orderInfo,
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", details: err.message });
+  }
+});
+
+module.exports = {
+  createNewOrder,
+  updateOrder,
+  getOrderById,
+  getAllOrderList,
+  getOrderStatus,
+};
