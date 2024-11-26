@@ -66,26 +66,7 @@ sequelize
   .catch((error) => {
     console.error("Unable to sync : ", error);
   });
+  
 app.use(globalErrorController);
 
 module.exports = app;
-
-// (async ()=>{
-//   await User.create({
-//    email: "kash@yopmail.com",
-//    password: "kash@yopmail.com",
-//    franchise_code: "12345",
-//    operating_name: "123",
-//    legal_name: "legal_name",
-//    phone: "7788654387",
-//    address: "address",
-//    city: "city",
-//    state: "state",
-//    country: "country",
-//    zipcode: "zipcode",
-//    role:  "Admin", // Default role if none provided
-//    created_by: "system", // Adjust as necessary
-//    createdAt: new Date(),
-//    updatedAt: new Date(),
-//  });
-// })()

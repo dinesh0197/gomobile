@@ -291,6 +291,7 @@ const getAllOrderList = catchAsync(async (req, res) => {
     // Fetch paginated orders
     orderData = await Order.findAll({
       where: whereConditions,
+      order: [['createdAt', 'DESC']],
       limit,
       offset,
     });
