@@ -155,6 +155,39 @@ exports.getAllUsers = catchAsync(async (req, res) => {
   }
 });
 
+exports.getUserProfile = catchAsync(async (req, res) => {
+  const { id } = req.userInfo;
+  try {
+    const user = await User.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        error: true,
+        code: 404,
+      });
+    }
+
+    return res.status(200).json(
+      success(
+        "User retrieved successfully",
+        {
+          data: {
+            id: user.id,
+            legal_name: user.legal_name,
+            email: user.email,
+            token: token,
+            role: user.role,
+          },
+        },
+        res.statusCode
+      )
+    );
+  } catch (e) {
+    return res.status(400).json(error(e, res.statusCode));
+  }
+});
+
 exports.createRequest = catchAsync(async (req, res) => {
   const {
     email,

@@ -13,7 +13,6 @@ const targetDirectory = "logs";
 const globalErrorController = require("./helper/error-handler");
 const sequelize = require("./config/db-connection");
 const userRouter = require("./routes/user-router");
-const maintenanceRouter = require("./routes/maintenance-routes/maintenance-route");
 
 const app = express();
 app.disable("x-powered-by");
@@ -66,7 +65,7 @@ sequelize
   .catch((error) => {
     console.error("Unable to sync : ", error);
   });
-  
+
 app.use(globalErrorController);
 
 module.exports = app;
