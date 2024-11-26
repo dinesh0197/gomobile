@@ -16,6 +16,7 @@ const {
   resetPasswordRequest,
   getLoginRequest,
   sendOTPwithToEmail,
+  getUserProfile,
 } = require("../controller/auth-controller");
 const {
   authenticateUser,
