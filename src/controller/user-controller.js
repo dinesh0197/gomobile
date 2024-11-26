@@ -187,15 +187,29 @@ exports.getRoleBasedUserLists = catchAsync(async (req, res) => {
 });
 
 exports.dashBoardDetail = catchAsync(async (req, res) => {
-  const user = await User.findAndCountAll();
-  const order = await Order.findAndCountAll();
+  const { role, id } = req.userInfo || {};
+  let filter = {};
 
-  // const assetRequest = await AssetRequest.findAndCountAll({});
-  // const assetRequestAccept = await AssetRequest.findAndCountAll({
-  //   where: {
-  //     status: "Accepted",
-  //   },
-  // });
+  if (role === "User") {
+    filter.assignedFranchiseId = id;
+  }
+
+  const user = await User.findAndCountAll({ where: filter });
+  const order = await Order.findAndCountAll({ where: filter });
+  const pendingOrders = await Order.findAndCountAll({
+    where: {
+      ...filter,
+      status: "Pending",
+    },
+  });
+
+  const shippedOrders = await Order.findAndCountAll({
+    where: {
+      filter,
+      status: "Shipped",
+    },
+  });
+
   return res.status(200).json(
     success(
       "Success",
@@ -203,14 +217,15 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
         data: {
           userCount: user.count,
           orderCount: order.count,
-          // assetRequest: assetRequest.count,
-          // assetRequestAccept: assetRequestAccept.count,
+          pendingOrderCount: pendingOrders.count,
+          shippedOrderCount: shippedOrders.count,
         },
       },
       res.statusCode
     )
   );
 });
+
 exports.userDetails = catchAsync(async (req, res) => {
   const tenantDocument = await FileManager.findAll({
     where: {

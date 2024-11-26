@@ -18,10 +18,7 @@ const {
   sendOTPwithToEmail,
   getUserProfile,
 } = require("../controller/auth-controller");
-const {
-  authenticateUser,
-  authenticateUserConditional,
-} = require("../jwtStrategy/JwtStrategy");
+const { authenticateUserConditional } = require("../jwtStrategy/JwtStrategy");
 
 const authRouter = new express.Router();
 // authRouter.use(authenticateUser);
