@@ -606,25 +606,26 @@ const updateOrder = catchAsync(async (req, res) => {
 
 const getOrderStatus = catchAsync(async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id: internalOrderId } = req.params;
 
     const orderData = await Order.findOne({
       where: {
-        internalOrderId: id,
+        internalOrderId: internalOrderId,
       },
       attributes: { exclude: excludeAudits },
     });
-
-    console.log({ orderData });
 
     if (!orderData) {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    const { id } = orderData;
+
     const shippingAddresses = await ShippingAddress.findAll({
       where: { orderId: id },
       attributes: { exclude: excludeAudits },
     });
+
     const billingAddress = await BillingAddress.findAll({
       where: { orderId: id },
       attributes: { exclude: excludeAudits },
@@ -673,10 +674,96 @@ const getOrderStatus = catchAsync(async (req, res) => {
   }
 });
 
+const updateSpecialRequest = catchAsync(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { specialRequest } = req.body;
+
+    await Order.update({ specialRequest }, { where: { internalOrderId: id } });
+
+    // Fetch the updated record
+    const updatedOrder = await Order.findOne({
+      where: { internalOrderId: id },
+      attributes: ["internalOrderId", "customerOrderNumber", "specialRequest"],
+    });
+
+    if (updatedOrder) {
+      return res.status(200).json({
+        internalOrderId: updatedOrder.internalOrderId,
+        orderNumber: updatedOrder.customerOrderNumber,
+        specialRequest: updatedOrder.specialRequest,
+        message: "Special request updated successfully",
+      });
+    } else {
+      return res.status(404).json({
+        message: "Order not found or update failed",
+      });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", details: err.message });
+  }
+});
+
+const updateShippingLabel = catchAsync(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { filename } = req.file || {}; 
+    const { requestComment = "" } = req.body;
+
+    if (!filename) {
+      return res
+        .status(400)
+        .json({ message: "Shipping label file is required" });
+    }
+
+    const orderData = await Order.findOne({
+      where: {
+        internalOrderId: id,
+      },
+      attributes: ["id"],
+    });
+
+    if (!orderData) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const [updatedRows] = await ShippingLabel.update(
+      {
+        filePath: filename,
+        updatedDate: new Date(),
+        requestComment: requestComment,
+      },
+      {
+        where: {
+          orderId: orderData.id,
+        },
+      }
+    );
+
+    if (updatedRows > 0) {
+      return res.status(200).json({
+        message: "Shipping label updated successfully",
+      });
+    } else {
+      return res.status(404).json({
+        message: "Shipping label not found or update failed",
+      });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", details: err.message });
+  }
+});
+
 module.exports = {
   createNewOrder,
   updateOrder,
   getOrderById,
   getAllOrderList,
   getOrderStatus,
+  updateSpecialRequest,
+  updateShippingLabel,
 };
