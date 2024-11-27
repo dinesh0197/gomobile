@@ -156,4 +156,5 @@ exports.RequestShippingLabelNotification = (emails, order) => {
     Best regards,
     [Your Company Name]
   `;
+  return this.sendEmail(emails, adminBody, subject);
 };
