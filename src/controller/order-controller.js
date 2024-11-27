@@ -259,7 +259,7 @@ const createNewOrder = catchAsync(async (req, res) => {
 const getAllOrderList = catchAsync(async (req, res) => {
   try {
     const { search, pageNo = 1, perPage = 10 } = req.query;
-    const limit = parseInt(perPage, 10) || 10;
+    const limit = parseInt(perPage, 20) || 10;
     const offset = (parseInt(pageNo, 10) - 1) * limit;
 
     const { role, id } = req.userInfo || {};
@@ -292,17 +292,15 @@ const getAllOrderList = catchAsync(async (req, res) => {
     // Fetch paginated orders
     orderData = await Order.findAll({
       where: whereConditions,
-      // include: [
-      //   {
-      //     model: ShippingLabel,
-      //     as: "shippingLabel",
-      //   },
-      // ],
+      include: [
+        {
+          model: ShippingLabel,
+          as: "shippingLabel",
+        },
+      ],
       order: [["createdAt", "DESC"]],
       limit,
       offset,
-      raw: true,
-      nest: true
     });
 
     console.log({ orderData });
