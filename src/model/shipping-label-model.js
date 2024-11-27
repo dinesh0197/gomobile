@@ -39,4 +39,10 @@ ShippingLabel.belongsTo(Order, {
   as: "order",
 });
 
+
+Order.hasOne(ShippingLabel, {
+  foreignKey: "orderId", // Match the foreignKey in ShippingLabel
+  as: "shippingLabel", // Alias to use in includes
+});
+
 module.exports = ShippingLabel;
