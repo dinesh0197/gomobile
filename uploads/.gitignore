@@ -1,0 +1,5 @@
+# Ignore all `.pdf` files
+*.pdf
+
+# Ignore all `.log` files
+*.log
