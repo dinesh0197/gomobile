@@ -42,10 +42,12 @@ const Order = sequelize.define(
         "Completed",
         "Shipped",
         "Cancelled",
-        "Created"
+        "Created",
+        "Ordered",
+        "OnHold"
       ),
       allowNull: false,
-      defaultValue: "Pending",
+      defaultValue: "Ordered",
     },
     esd: {
       type: DataTypes.STRING(255),
