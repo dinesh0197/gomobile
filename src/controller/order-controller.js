@@ -292,16 +292,20 @@ const getAllOrderList = catchAsync(async (req, res) => {
     // Fetch paginated orders
     orderData = await Order.findAll({
       where: whereConditions,
-      include: [
-        {
-          model: ShippingLabel,
-          as: "shippingLabel"
-        }
-      ],
+      // include: [
+      //   {
+      //     model: ShippingLabel,
+      //     as: "shippingLabel",
+      //   },
+      // ],
       order: [["createdAt", "DESC"]],
       limit,
       offset,
+      raw: true,
+      nest: true
     });
+
+    console.log({ orderData });
 
     const totalPages = Math.ceil(totalCount / limit);
 
