@@ -115,7 +115,7 @@ const createNewOrder = catchAsync(async (req, res) => {
 
   try {
     // Generate unique IDs for customerOrderNumber and internalOrderId
-    const customerOrderNumber = `ORD${Date.now()}`;
+    const customerOrderNumber = orderInfo.orderNumber;
     const internalOrderId = `ORD${Math.floor(
       Math.random() * 900000000 + 100000000
     )}`;
@@ -258,16 +258,31 @@ const createNewOrder = catchAsync(async (req, res) => {
 
 const getAllOrderList = catchAsync(async (req, res) => {
   try {
-    const { search, pageNo = 1, perPage = 10 } = req.query;
-    const limit = parseInt(perPage, 20) || 10;
+    const {
+      search,
+      pageNo = 1,
+      perPage = 10,
+      status,
+      orderDate,
+      customerOrderNumber,
+      franchise,
+    } = req.query;
+    const limit = parseInt(perPage, 10) || 10;
     const offset = (parseInt(pageNo, 10) - 1) * limit;
 
     const { role, id } = req.userInfo || {};
     let filter = {};
 
-    if (role === "User") {
-      filter.assignedFranchiseId = id;
-    }
+    if (role === "User") filter.assignedFranchiseId = id;
+
+    if (status) filter.status = status;
+
+    if (role === "Admin" && franchise) filter.assignedFranchiseId = franchise;
+
+    if (orderDate) filter.orderDate = { [Op.eq]: new Date(orderDate) };
+
+    if (customerOrderNumber)
+      filter.customerOrderNumber = { [Op.like]: `%${customerOrderNumber}%` };
 
     let orderData;
     let totalCount;
@@ -302,8 +317,6 @@ const getAllOrderList = catchAsync(async (req, res) => {
       limit,
       offset,
     });
-
-    console.log({ orderData });
 
     const totalPages = Math.ceil(totalCount / limit);
 

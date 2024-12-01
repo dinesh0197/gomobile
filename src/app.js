@@ -20,6 +20,7 @@ app.disable("x-powered-by");
 
 const orderRouter = require("./routes/order-router");
 const User = require("./model/user-model");
+const supplierRouter = require("./routes/supplier-router");
 app.use(cors());
 
 app.get("/swagger.json", (req, res) => {
@@ -51,6 +52,7 @@ app.use("/auth", authRouter);
 app.use("/user", userRouter);
 // app.use("/maintenance", maintenanceRouter)
 app.use("/order", orderRouter);
+app.use("/supplier", supplierRouter);
 
 app.all("*", (req, res, next) => {
   next(`Cant find ${req.originalUrl} on this server`);
