@@ -1,13 +1,50 @@
+const { Op } = require("sequelize");
 const { success } = require("../helper/api-response");
 const catchAsync = require("../helper/catch-async");
 const Supplier = require("../model/supplier-management");
 
 exports.getAllSupplier = catchAsync(async (req, res) => {
-  const supplier = await Supplier.findAll();
+  const { search, pageNo = 1, perPage = 10 } = req.query;
 
-  return res
-    .status(200)
-    .json(success("All Supplier List", { data: supplier }, res.statusCode));
+  // Convert pageNo and perPage to integers
+  const limit = parseInt(perPage, 10) || 10;
+  const offset = (parseInt(pageNo, 10) - 1) * limit;
+
+  const whereClause = search
+    ? {
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { email: { [Op.like]: `%${search}%` } },
+          { phone: { [Op.like]: `%${search}%` } },
+        ],
+      }
+    : {};
+
+  const totalCount = await Supplier.count({
+    where: whereClause,
+  });
+
+  const supplier = await Supplier.findAll(
+    { where: whereClause },
+    limit,
+    offset
+  );
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return res.status(200).json(
+    success(
+      "All Supplier List",
+      {
+        data: supplier,
+        totalCount,
+        perPage: limit,
+        pageNo: parseInt(pageNo, 10),
+        totalPages,
+      },
+      res.statusCode
+    )
+  );
 });
 
 exports.createSupplier = catchAsync(async (req, res) => {
@@ -48,18 +85,33 @@ exports.getOneSupplier = catchAsync(async (req, res) => {
 });
 
 exports.updateSupplier = catchAsync(async (req, res) => {
+  const { id } = req.params;
   const payload = req.body;
-  const supplier = await Supplier.create(payload);
 
-  return res
-    .status(200)
-    .json(
-      success(
-        "Supplier Created Successfully",
-        { data: supplier },
-        res.statusCode
-      )
-    );
+  const [affectedRows] = await Supplier.update(payload, {
+    where: { id },
+  });
+
+  if (affectedRows === 0) {
+    return res
+      .status(404)
+      .json(error("Supplier not found or no changes applied", res.statusCode));
+  }
+
+  const updatedSupplier = await Supplier.findByPk(id);
+  const { id: authToken, ...rest } = updatedSupplier;
+  return res.status(200).json(
+    success(
+      "Supplier Updated Successfully",
+      {
+        data: {
+          authToken,
+          ...rest,
+        },
+      },
+      res.statusCode
+    )
+  );
 });
 
 exports.deleteSupplier = catchAsync(async (req, res) => {
