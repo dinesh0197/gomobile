@@ -1,7 +1,7 @@
 const { success, error } = require("../helper/api-response");
 const catchAsync = require("../helper/catch-async");
 const User = require("../model/user-model");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const {
   getCommonValuesFromObject,
   generateRandomAlphanumeric,
@@ -189,7 +189,7 @@ exports.getRoleBasedUserLists = catchAsync(async (req, res) => {
 exports.dashBoardDetail = catchAsync(async (req, res) => {
   const { role, id } = req.userInfo || {};
   let filter = {};
-  
+
   if (role === "User") {
     filter.assignedFranchiseId = id;
   }
@@ -210,6 +210,103 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
     },
   });
 
+  const ordersCountPerMonth = await Order.findAll({
+    where: {
+      ...filter,
+    },
+    attributes: [
+      [
+        Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m"),
+        "month",
+      ],
+      [Sequelize.fn("COUNT", Sequelize.col("id")), "orderCount"],
+    ],
+    group: [Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m")], // Group by month
+    raw: true,
+    order: [
+      [Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m"), "ASC"],
+    ],
+  });
+
+  let franchisesOrderCount = null;
+  if (role === "Admin") {
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const threeMonthsAgo = new Date(startOfMonth);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 2);
+
+    const rawResults = await User.findAll({
+      attributes: [
+        "id",
+        ["legal_name", "name"],
+        [
+          Sequelize.fn(
+            "DATE_FORMAT",
+            Sequelize.col("franchiseOrders.orderDate"),
+            "%Y-%m"
+          ),
+          "month",
+        ],
+        [
+          Sequelize.fn("COUNT", Sequelize.col("franchiseOrders.id")),
+          "orderCount",
+        ],
+      ],
+      include: [
+        {
+          model: Order,
+          as: "franchiseOrders",
+          attributes: [],
+          where: {
+            orderDate: {
+              [Op.gte]: threeMonthsAgo,
+            },
+          },
+        },
+      ],
+      group: [
+        "User.id",
+        Sequelize.fn(
+          "DATE_FORMAT",
+          Sequelize.col("franchiseOrders.orderDate"),
+          "%Y-%m"
+        ),
+      ],
+      raw: true,
+      order: [
+        ["id", "ASC"],
+        [
+          Sequelize.fn(
+            "DATE_FORMAT",
+            Sequelize.col("franchiseOrders.orderDate"),
+            "%Y-%m"
+          ),
+          "ASC",
+        ],
+      ],
+    });
+
+    franchisesOrderCount = rawResults.reduce((acc, record) => {
+      const { id, name, month, orderCount } = record;
+
+      // Find existing franchise entry
+      let franchise = acc.find((item) => item.id === id);
+      if (!franchise) {
+        franchise = { id, name, results: [] };
+        acc.push(franchise);
+      }
+
+      // Add month and order count to results
+      franchise.results.push({ month, orderCount });
+
+      return acc;
+    }, []);
+  }
+
   return res.status(200).json(
     success(
       "Success",
@@ -219,6 +316,8 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
           orderCount: order,
           pendingOrderCount: pendingOrders,
           shippedOrderCount: shippedOrders,
+          franchisesOrderCount,
+          ordersCountPerMonth,
         },
       },
       res.statusCode

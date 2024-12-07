@@ -104,6 +104,11 @@ Order.belongsTo(User, {
   as: "franchise", // Alias to access the franchise
 });
 
+User.hasMany(Order, {
+  foreignKey: "assignedFranchiseId",
+  as: "franchiseOrders",
+});
+
 Order.afterCreate(async (order, options) => {
   try {
     const userEmail = await User.findOne({
