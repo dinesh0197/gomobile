@@ -98,7 +98,7 @@ exports.updateSupplier = catchAsync(async (req, res) => {
       .json(error("Supplier not found or no changes applied", res.statusCode));
   }
 
-  const updatedSupplier = await Supplier.findByPk(id);
+  const updatedSupplier = await Supplier.findByPk(id, { raw: true });
   const { id: authToken, ...rest } = updatedSupplier;
   return res.status(200).json(
     success(
