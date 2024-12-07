@@ -305,6 +305,25 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
 
       return acc;
     }, []);
+
+    const monthColors = {
+      0: "#0070C0",
+      1: "#FF0000",
+      2: "#FFC000",
+    };
+
+    franchisesOrderCount = franchisesOrderCount.map((item) => {
+      if (item.results.length) {
+        return {
+          ...item,
+          results: item.results.map((ele, idx) => ({
+            ...ele,
+            color: monthColors[idx],
+          })),
+        };
+      }
+      return item;
+    });
   }
 
   return res.status(200).json(
