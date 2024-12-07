@@ -68,7 +68,7 @@ exports.createSupplier = catchAsync(async (req, res) => {
 
 exports.getOneSupplier = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const supplier = await Supplier.findByPk(id);
+  const supplier = await Supplier.findByPk(id, { raw: true });
 
   if (!supplier) return res.status(404).json({ message: "Supplier not found" });
 
