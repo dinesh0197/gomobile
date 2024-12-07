@@ -40,6 +40,10 @@ const Supplier = sequelize.define(
     zipcode: {
       type: DataTypes.STRING(20),
     },
+    status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

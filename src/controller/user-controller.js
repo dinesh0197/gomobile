@@ -9,6 +9,7 @@ const {
 const { uploadSingleFile } = require("../helper/file-upload");
 const { passwordUpdated } = require("../helper/send-email");
 const Order = require("../model/order-model");
+const moment = require("moment");
 
 exports.getViewUser = catchAsync(async (req, res) => {
   return res
@@ -210,9 +211,19 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
     },
   });
 
-  const ordersCountPerMonth = await Order.findAll({
+  const oneYear = Array.from({ length: 12 }, (_, i) => {
+    return moment().subtract(i, "months").format("YYYY-MM");
+  }).reverse();
+
+  const rawResults = await Order.findAll({
     where: {
       ...filter,
+      orderDate: {
+        [Sequelize.Op.gte]: moment()
+          .subtract(12, "months")
+          .startOf("month")
+          .toDate(),
+      },
     },
     attributes: [
       [
@@ -221,23 +232,26 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
       ],
       [Sequelize.fn("COUNT", Sequelize.col("id")), "orderCount"],
     ],
-    group: [Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m")], // Group by month
+    group: [Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m")],
     raw: true,
-    order: [
-      [Sequelize.fn("DATE_FORMAT", Sequelize.col("orderDate"), "%Y-%m"), "ASC"],
-    ],
   });
+
+  const orderCountMap = Object.fromEntries(
+    rawResults.map((result) => [result.month, parseInt(result.orderCount, 10)])
+  );
+
+  const ordersCountPerMonth = oneYear.map((month) => ({
+    month,
+    orderCount: orderCountMap[month] || 0,
+  }));
+
+  // console.log({ ordersCountPerMonth });
 
   let franchisesOrderCount = null;
   if (role === "Admin") {
-    const currentDate = new Date();
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const threeMonthsAgo = new Date(startOfMonth);
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 2);
+    const threeMonths = Array.from({ length: 3 }, (_, i) => {
+      return moment().subtract(i, "months").format("YYYY-MM");
+    }).reverse();
 
     const rawResults = await User.findAll({
       attributes: [
@@ -263,7 +277,7 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
           attributes: [],
           where: {
             orderDate: {
-              [Op.gte]: threeMonthsAgo,
+              [Op.gte]: `${threeMonths[0]}-01`,
             },
           },
         },
@@ -277,34 +291,36 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
         ),
       ],
       raw: true,
-      order: [
-        ["id", "ASC"],
-        [
-          Sequelize.fn(
-            "DATE_FORMAT",
-            Sequelize.col("franchiseOrders.orderDate"),
-            "%Y-%m"
-          ),
-          "ASC",
-        ],
-      ],
     });
 
     franchisesOrderCount = rawResults.reduce((acc, record) => {
       const { id, name, month, orderCount } = record;
 
-      // Find existing franchise entry
+      // Find existing franchise
       let franchise = acc.find((item) => item.id === id);
       if (!franchise) {
         franchise = { id, name, results: [] };
         acc.push(franchise);
       }
 
-      // Add month and order count to results
+      // Add the record to the results
       franchise.results.push({ month, orderCount });
 
       return acc;
     }, []);
+
+    franchisesOrderCount.forEach((franchise) => {
+      const existingMonths = franchise.results.map((r) => r.month);
+
+      threeMonths.forEach((month) => {
+        if (!existingMonths.includes(month)) {
+          franchise.results.push({ month, orderCount: 0 });
+        }
+      });
+
+      // Sort results by month to maintain order
+      franchise.results.sort((a, b) => a.month.localeCompare(b.month));
+    });
 
     const monthColors = {
       0: "#0070C0",
@@ -324,6 +340,8 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
       }
       return item;
     });
+
+    // console.dir(franchisesOrderCount, { depth: null });
   }
 
   return res.status(200).json(

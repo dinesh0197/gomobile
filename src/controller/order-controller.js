@@ -111,10 +111,15 @@ const createNewOrder = catchAsync(async (req, res) => {
     orderTotal,
   } = req.body;
 
-  const transaction = await Order.sequelize.transaction(); // Start the transaction
+  const supplierId = req.headers["x-auth-token"];
+  console.log({ supplierId });
+
+  if (!supplierId)
+    return res.status(400).json({ error: "x-auth-token is necessaary" });
+
+  const transaction = await Order.sequelize.transaction();
 
   try {
-    // Generate unique IDs for customerOrderNumber and internalOrderId
     const customerOrderNumber = orderInfo.orderNumber;
     const internalOrderId = `ORD${Math.floor(
       Math.random() * 900000000 + 100000000
@@ -126,7 +131,9 @@ const createNewOrder = catchAsync(async (req, res) => {
       customerOrderNumber,
       internalOrderId,
       orderTotal,
-      status: "Pending",
+      status: "Ordered",
+      assignedFranchiseId: orderInfo.franchiseId,
+      createdBy: supplierId,
     };
 
     const orderData = await Order.create(orderPayload, { transaction });
@@ -312,6 +319,11 @@ const getAllOrderList = catchAsync(async (req, res) => {
           model: ShippingLabel,
           as: "shippingLabel",
         },
+        {
+          model: User,
+          as: "franchise",
+          attributes: ["franchise_code","id", "legal_name"]
+        }
       ],
       order: [["createdAt", "DESC"]],
       limit,

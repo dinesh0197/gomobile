@@ -7,6 +7,7 @@ const {
   RequestShippingLabelNotification,
   OrderCancelledNotification,
 } = require("../helper/send-email");
+const Supplier = require("./supplier-management");
 
 const Order = sequelize.define(
   "Order", // Model name
@@ -68,7 +69,7 @@ const Order = sequelize.define(
       type: DataTypes.STRING(255),
     },
     createdBy: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.UUID,
       allowNull: false,
     },
     createdAt: {
@@ -87,9 +88,8 @@ const Order = sequelize.define(
       type: DataTypes.DATE,
     },
     assignedFranchiseId: {
-      // Add this line to define the assignedFranchiseId
       type: DataTypes.UUID,
-      allowNull: true, // You can set this to true if not all orders are assigned a franchise
+      allowNull: false,
     },
   },
   {
@@ -100,13 +100,23 @@ const Order = sequelize.define(
 
 // Define associations
 Order.belongsTo(User, {
-  foreignKey: "assignedFranchiseId", // Correcting the foreign key for franchise association
-  as: "franchise", // Alias to access the franchise
+  foreignKey: "assignedFranchiseId",
+  as: "franchise",
 });
 
 User.hasMany(Order, {
   foreignKey: "assignedFranchiseId",
   as: "franchiseOrders",
+});
+
+Order.belongsTo(Supplier, {
+  foreignKey: "createdBy",
+  as: "supplierManagement",
+});
+
+Supplier.hasMany(Order, {
+  foreignKey: "createdBy",
+  as: "orders",
 });
 
 Order.afterCreate(async (order, options) => {
