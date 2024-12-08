@@ -1,6 +1,8 @@
 const { Router } = require("express");
 const product = Router();
 const ProductItem = require("../controller/product-controller");
+const { authenticateUser } = require("../jwtStrategy/JwtStrategy");
+product.use(authenticateUser);
 
 //  get all suppliers
 product.get("/");
