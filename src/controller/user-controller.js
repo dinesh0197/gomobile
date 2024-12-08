@@ -248,7 +248,7 @@ exports.dashBoardDetail = catchAsync(async (req, res) => {
   // console.log({ ordersCountPerMonth });
 
   let franchisesOrderCount = null;
-  if (role === "Admin") {
+  if (role !== "User") {
     const threeMonths = Array.from({ length: 3 }, (_, i) => {
       return moment().subtract(i, "months").format("YYYY-MM");
     }).reverse();
