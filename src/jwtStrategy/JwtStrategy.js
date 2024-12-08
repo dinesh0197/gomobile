@@ -1,6 +1,7 @@
 const passport = require("passport");
 const { Strategy, ExtractJwt } = require("passport-jwt");
 const User = require("../model/user-model");
+const Supplier = require("../model/supplier-management");
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -42,13 +43,36 @@ const authenticateUser = (req, res, next) => {
 
 const authenticateUserConditional = (req, res, next) => {
   const authHeader = req.headers.authorization;
+
   if (authHeader) {
     return authenticateUser(req, res, next);
   }
   return next();
 };
 
+const authenticateSuppliers = async (req, res, next) => {
+  const authToken = req.headers["x-auth-token"];
+  const supplier =
+    authToken &&
+    (await Supplier.findOne({
+      where: {
+        id: authToken,
+        status: true,
+      },
+      attributes: ["id", "email", "name"],
+      raw: true, // Returns a plain JavaScript object
+    }));
+
+  if (supplier) {
+    req.supplier = supplier;
+    return next();
+  } else {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
 module.exports = {
   authenticateUser,
+  authenticateSuppliers,
   authenticateUserConditional,
 };

@@ -1,6 +1,6 @@
 const { success, error } = require("../helper/api-response");
 const catchAsync = require("../helper/catch-async");
-const { Op } = require("sequelize");
+const { Op, where, col, fn } = require("sequelize");
 const Order = require("../model/order-model");
 const ShippingAddress = require("../model/shipping-address-model");
 const BillingAddress = require("../model/billing-address-model");
@@ -286,7 +286,10 @@ const getAllOrderList = catchAsync(async (req, res) => {
 
     if (role === "Admin" && franchise) filter.assignedFranchiseId = franchise;
 
-    if (orderDate) filter.orderDate = { [Op.eq]: new Date(orderDate) };
+    if (orderDate) {
+      const formattedDate = new Date(orderDate).toISOString().split("T")[0];
+      filter.orderDate = where(fn("DATE", col("orderDate")), formattedDate);
+    }
 
     if (customerOrderNumber)
       filter.customerOrderNumber = { [Op.like]: `%${customerOrderNumber}%` };
@@ -322,8 +325,8 @@ const getAllOrderList = catchAsync(async (req, res) => {
         {
           model: User,
           as: "franchise",
-          attributes: ["franchise_code","id", "legal_name"]
-        }
+          attributes: ["franchise_code", "id", "legal_name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
       limit,

@@ -88,7 +88,7 @@ exports.getUserById = catchAsync(async (req, res) => {
 
 exports.getAllUsers = catchAsync(async (req, res) => {
   try {
-    const { search, pageNo = 1, perPage = 10 } = req.query;
+    let { search, pageNo = 1, perPage = 10, filter = {} } = req.query;
 
     // Convert pageNo and perPage to integers
     const limit = parseInt(perPage, 10) || 10;
@@ -97,10 +97,16 @@ exports.getAllUsers = catchAsync(async (req, res) => {
     let users;
     let totalCount;
 
+    if (req.supplier) {
+      filter = { status: true };
+      attributes = [["legal_name", "name"], "id", "franchise_code"];
+    }
+
     if (search) {
       // Fetch total count for the search criteria
       totalCount = await User.count({
         where: {
+          ...filter,
           [Op.or]: [
             { franchise_code: { [Op.like]: `%${search}%` } },
             { operating_name: { [Op.like]: `%${search}%` } },
@@ -112,6 +118,7 @@ exports.getAllUsers = catchAsync(async (req, res) => {
 
       // Fetch paginated users
       users = await User.findAll({
+        ...filter,
         where: {
           [Op.or]: [
             { franchise_code: { [Op.like]: `%${search}%` } },
@@ -120,15 +127,24 @@ exports.getAllUsers = catchAsync(async (req, res) => {
             { email: { [Op.like]: `%${search}%` } },
           ],
         },
+        attributes: req.supplier ? attributes : undefined,
         limit,
         offset,
       });
     } else {
       // Fetch total count for all users
-      totalCount = await User.count();
+      totalCount = await User.count({
+        where: {
+          ...filter,
+        },
+      });
 
       // Fetch paginated users
       users = await User.findAll({
+        where: {
+          ...filter,
+        },
+        attributes: req.supplier ? attributes : undefined,
         limit,
         offset,
       });
