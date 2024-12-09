@@ -47,8 +47,8 @@ exports.passwordUpdated = async (user) => {
 exports.sendVisitorWelcomeEmail = async (user, token) => {
   const fullName = user.legal_name;
   const emailUsername = user.email;
-  const subject = "Visitor Request is Approved!";
-  let body = `Hello ${fullName},\n\nPlease use this temporary password to login.\n\nYour username is ${emailUsername}\nYour Password is ${token}.`;
+  const subject = "Welcome to Go Mobile App - Your Franchise Account is Ready! 🚀";
+  let body = `Hello ${fullName},\n\nPlease use this temporary password to login.\n\nYour username is: ${emailUsername}\nYour Password is: ${token}.`;
 
   return this.sendEmail([user.email], body, subject);
 };
