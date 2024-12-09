@@ -1,7 +1,17 @@
 const { Router } = require("express");
 const product = Router();
 const ProductItem = require("../controller/product-controller");
-const { authenticateUser } = require("../jwtStrategy/JwtStrategy");
+const {
+  authenticateUser,
+  authenticateSuppliers,
+} = require("../jwtStrategy/JwtStrategy");
+
+product.patch(
+  "/supplier/:id",
+  authenticateSuppliers,
+  ProductItem.updateProductItem
+);
+
 product.use(authenticateUser);
 
 //  get all suppliers
