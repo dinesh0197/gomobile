@@ -17,12 +17,11 @@ const maintenanceRouter = require("./routes/maintenance-routes/maintenance-route
 
 const app = express();
 app.disable("x-powered-by");
+app.use(cors());
 
 const orderRouter = require("./routes/order-router");
-const User = require("./model/user-model");
 const supplierRouter = require("./routes/supplier-router");
 const productRouter = require("./routes/product-router");
-app.use(cors());
 
 app.get("/swagger.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -60,6 +59,8 @@ app.all("*", (req, res, next) => {
   next(`Cant find ${req.originalUrl} on this server`);
 });
 
+app.use(globalErrorController);
+
 sequelize
   .sync()
   .then(() => {
@@ -68,6 +69,5 @@ sequelize
   .catch((error) => {
     console.error("Unable to sync : ", error);
   });
-app.use(globalErrorController);
 
 module.exports = app;

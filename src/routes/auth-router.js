@@ -26,10 +26,10 @@ const authRouter = new express.Router();
 authRouter.get("/users", authenticateUserConditional, getAllUsers);
 authRouter.get("/profile", authenticateUserConditional, getUserProfile);
 authRouter.get("/user/:id", authenticateUserConditional, getUserById);
-authRouter.post("/create-user", createRequest);
+authRouter.post("/create-user", authenticateUserConditional, createRequest);
 // authRouter.post('/create-user', validateCreateUser, createRequest);
 // authRouter.put('/update-user/:id', validateUpdateUser, updateUser);
-authRouter.put("/update-user/:id", updateUser);
+authRouter.put("/update-user/:id", authenticateUserConditional, updateUser);
 
 authRouter.post("/login", validateLoginRequest, getLoginRequest);
 authRouter.post("/forgotPassword", validateForgotPassword, sendOTPwithToEmail);
