@@ -30,6 +30,17 @@ exports.getLoginRequest = catchAsync(async (req, res) => {
       return res.status(404).json(error("User not found.", res.statusCode));
     }
 
+    if (!user.status) {
+      return res
+        .status(400)
+        .json(
+          error(
+            "Your account is inactive. Please check your email or contact support to reactivate it.",
+            res.statusCode
+          )
+        );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res
