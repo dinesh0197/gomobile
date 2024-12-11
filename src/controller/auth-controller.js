@@ -16,7 +16,7 @@ const {
 const jsonWebToken = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const moment = require("moment/moment");
-const { Op } = require("sequelize"); // Import Sequelize operators
+const { Op } = require("sequelize");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
@@ -221,9 +221,15 @@ exports.createRequest = catchAsync(async (req, res) => {
     status,
   } = req.body;
 
-  // Check if the user already exists
+  // Check if the user already, franchise_code, operating_name exists
   let userData = await User.findOne({
-    where: { email: email },
+    where: {
+      [Op.or]: [
+        { email: email },
+        { franchise_code: franchise_code },
+        { operating_name: operating_name },
+      ],
+    },
   });
 
   if (!userData) {
@@ -255,6 +261,9 @@ exports.createRequest = catchAsync(async (req, res) => {
   } else {
     // User exists, check if password is set
     if (userData.password) {
+      console.log(
+        "Password not set up. Proceed to send OTP for password setup."
+      );
       return res
         .status(400)
         .json(
@@ -265,8 +274,29 @@ exports.createRequest = catchAsync(async (req, res) => {
         );
     }
 
-    console.log("Password not set up. Proceed to send OTP for password setup.");
-    // Handle OTP or password setup process here if necessary
+    // Check if the franchise_code already exists
+    if (userData.franchise_code === franchise_code) {
+      return res
+        .status(400)
+        .json(
+          error(
+            "User account already exist with similar franchise code",
+            res.statusCode
+          )
+        );
+    }
+
+    // Check if the operating_name already exists
+    if (userData.operating_name === operating_name) {
+      return res
+        .status(400)
+        .json(
+          error(
+            "User account already exist with similar operating name",
+            res.statusCode
+          )
+        );
+    }
   }
 
   return res

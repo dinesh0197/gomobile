@@ -49,6 +49,30 @@ exports.getAllSupplier = catchAsync(async (req, res) => {
 
 exports.createSupplier = catchAsync(async (req, res) => {
   const payload = req.body;
+
+  const supplierData = Supplier.findOne({
+    where: {
+      [Op.or]: [{ email: payload.email }, { name: payload.name }],
+    },
+  });
+
+  if (supplierData.email === payload.email) {
+    return res
+      .status(400)
+      .json(
+        error(
+          "Supplier account request already existed with this email address.",
+          res.statusCode
+        )
+      );
+  }
+
+  if (supplierData.name === payload.name) {
+    return res
+      .status(400)
+      .json(error("Supplier name is already taken.", res.statusCode));
+  }
+
   const supplier = await Supplier.create(payload);
 
   return res.status(200).json(

@@ -325,7 +325,7 @@ const getAllOrderList = catchAsync(async (req, res) => {
         {
           model: User,
           as: "franchise",
-          attributes: ["franchise_code", "id", "legal_name"],
+          attributes: ["franchise_code", "id", "operating_name"],
         },
       ],
       order: [["createdAt", "DESC"]],
