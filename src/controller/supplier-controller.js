@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { success } = require("../helper/api-response");
+const { success, error } = require("../helper/api-response");
 const catchAsync = require("../helper/catch-async");
 const Supplier = require("../model/supplier-management");
 

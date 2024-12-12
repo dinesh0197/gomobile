@@ -259,21 +259,6 @@ exports.createRequest = catchAsync(async (req, res) => {
     await sendVisitorWelcomeEmail(userData, randomPassword);
     console.log(`User created with random password: ${randomPassword}`);
   } else {
-    // User exists, check if password is set
-    if (userData.password) {
-      console.log(
-        "Password not set up. Proceed to send OTP for password setup."
-      );
-      return res
-        .status(400)
-        .json(
-          error(
-            "User account request already submitted with this email address.",
-            res.statusCode
-          )
-        );
-    }
-
     // Check if the franchise_code already exists
     if (userData.franchise_code === franchise_code) {
       return res
@@ -293,6 +278,21 @@ exports.createRequest = catchAsync(async (req, res) => {
         .json(
           error(
             "User account already exist with similar operating name",
+            res.statusCode
+          )
+        );
+    }
+
+    // User exists, check if password is set
+    if (userData.password) {
+      console.log(
+        "Password not set up. Proceed to send OTP for password setup."
+      );
+      return res
+        .status(400)
+        .json(
+          error(
+            "User account request already submitted with this email address.",
             res.statusCode
           )
         );
