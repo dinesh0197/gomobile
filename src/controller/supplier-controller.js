@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const { success, error } = require("../helper/api-response");
 const catchAsync = require("../helper/catch-async");
 const Supplier = require("../model/supplier-management");
+const { raw } = require("mysql2");
 
 exports.getAllSupplier = catchAsync(async (req, res) => {
   const { search, pageNo = 1, perPage = 10 } = req.query;
@@ -50,13 +51,14 @@ exports.getAllSupplier = catchAsync(async (req, res) => {
 exports.createSupplier = catchAsync(async (req, res) => {
   const payload = req.body;
 
-  const supplierData = Supplier.findOne({
+  const supplierData = await Supplier.findOne({
     where: {
       [Op.or]: [{ email: payload.email }, { name: payload.name }],
     },
+    raw: true,
   });
 
-  if (supplierData.email === payload.email) {
+  if (supplierData && supplierData.email === payload.email) {
     return res
       .status(400)
       .json(
@@ -67,7 +69,7 @@ exports.createSupplier = catchAsync(async (req, res) => {
       );
   }
 
-  if (supplierData.name === payload.name) {
+  if (supplierData && supplierData.name === payload.name) {
     return res
       .status(400)
       .json(error("Supplier name is already taken.", res.statusCode));
