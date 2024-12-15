@@ -110,7 +110,7 @@ exports.getAllUsers = catchAsync(async (req, res) => {
 
     if (req.supplier) {
       filter = { status: true };
-      attributes = [["legal_name", "name"], "id", "franchise_code"];
+      attributes = [["operating_name", "name"], "id", "franchise_code"];
     }
 
     if (search) {

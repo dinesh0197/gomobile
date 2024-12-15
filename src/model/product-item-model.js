@@ -16,6 +16,9 @@ const ProductItem = sequelize.define("ProductItem", {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
+  mpn: {
+    type: DataTypes.STRING(255),
+  },
   brand: {
     type: DataTypes.STRING(255),
   },

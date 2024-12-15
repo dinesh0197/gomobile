@@ -73,6 +73,7 @@ const productItemColNames = [
   "id",
   "orderId",
   "caridSKU",
+  "mpn",
   "brand",
   "vpn",
   "description",
