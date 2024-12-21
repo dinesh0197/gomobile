@@ -62,7 +62,7 @@ app.all("*", (req, res, next) => {
 app.use(globalErrorController);
 
 sequelize
-  .sync()
+  .sync({alter: true})
   .then(() => {
     console.log("Syncedsuccessfully!");
   })
