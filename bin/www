@@ -54,6 +54,7 @@ function normalizePort(val) {
  */
 
 function onError(error) {
+  console.log("server is crashed")
   if (error.syscall !== 'listen') {
     throw error;
   }
@@ -82,6 +83,7 @@ function onError(error) {
  */
 
 function onListening() {
+  console.log("server successfully started")
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr

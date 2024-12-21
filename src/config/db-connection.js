@@ -11,7 +11,8 @@ const sequelize = new Sequelize(
     host: process.env.HOST,
     port: process.env.DBPORT, // Add the port number here
     dialect: "mysql",
-    logging: console.log, // Optional: Enable logging in development
+    // logging: console.log, // Optional: Enable logging in development
+    logging: false,
   }
 );
 
