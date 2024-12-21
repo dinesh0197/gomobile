@@ -22,6 +22,7 @@ app.use(cors());
 const orderRouter = require("./routes/order-router");
 const supplierRouter = require("./routes/supplier-router");
 const productRouter = require("./routes/product-router");
+const Supplier = require("./model/supplier-management");
 
 app.get("/swagger.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");

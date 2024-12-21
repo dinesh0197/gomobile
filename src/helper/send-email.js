@@ -4,15 +4,15 @@ exports.sendEmail = async (toAddress, data, subject) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "perumal.tradezap@gmail.com", // Your Gmail address
-      pass: "oscs tngb wpcl sbcw", // Your Gmail password or application-specific password
+      user: "perumal.tradezap@gmail.com",
+      pass: "oscs tngb wpcl sbcw",
     },
   });
   const mailOptions = {
-    from: "m.chithirai3597@gmail.com", // Sender address
-    to: toAddress, // List of recipients
-    subject: subject, // Subject line
-    text: data, // Plain text body
+    from: "m.chithirai3597@gmail.com",
+    to: toAddress,
+    subject: subject,
+    text: data,
   };
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
@@ -47,7 +47,8 @@ exports.passwordUpdated = async (user) => {
 exports.sendVisitorWelcomeEmail = async (user, token) => {
   const fullName = user.legal_name;
   const emailUsername = user.email;
-  const subject = "Welcome to Go Mobile App - Your Franchise Account is Ready! 🚀";
+  const subject =
+    "Welcome to Go Mobile App - Your Franchise Account is Ready! 🚀";
   let body = `Hello ${fullName},\n\nPlease use this temporary password to login.\n\nYour username is: ${emailUsername}\nYour Password is: ${token}.`;
 
   return this.sendEmail([user.email], body, subject);
@@ -75,16 +76,10 @@ exports.OrderAssignedNotification = (email, order, action) => {
   return this.sendEmail([email], body, subject);
 };
 
-exports.OrderCancelledNotification = (emails, order, action, recipientType) => {
+exports.OrderCancelledNotification = (emails, order) => {
   let subject = `Order Cancelled: ${order.internalOrderId}`;
-  let body = "";
-
-  if (recipientType === "admin") {
-    body = `
-      Dear Admin,
-
+  let body = `
       The following order has been cancelled.
-
       Order Details:
       - Order ID: ${order.internalOrderId}
       - Customer Order Number: ${order.customerOrderNumber}
@@ -92,35 +87,9 @@ exports.OrderCancelledNotification = (emails, order, action, recipientType) => {
       - Status: ${order.status}
 
       Please check the system for more details.
-
-      Best regards,
-      [Your Company Name]
     `;
-  } else if (recipientType === "user") {
-    body = `
-      Dear Customer,
 
-      We regret to inform you that your order has been cancelled.
-
-      Order Details:
-      - Order ID: ${order.internalOrderId}
-      - Customer Order Number: ${order.customerOrderNumber}
-      - Order Total: ${order.orderTotal}
-      - Status: ${order.status}
-
-      If you believe this cancellation was made in error, please contact our support team.
-
-      Thank you for your understanding.
-
-      Best regards,
-      [Your Company Name]
-    `;
-  }
-
-  // Send email to the given emails
-  emails.forEach((email) => {
-    this.sendEmail(email, body, subject);
-  });
+  this.sendEmail(emails, body, subject);
 };
 
 exports.UploadShippingLabelNotification = (email, order, filename) => {
@@ -139,11 +108,7 @@ exports.UploadShippingLabelNotification = (email, order, filename) => {
 
 exports.RequestShippingLabelNotification = (emails, order) => {
   const subject = `Request for Shipping Label: ${order.internalOrderId}`;
-
-  // Admin email body
-  const adminBody = `
-    Hello,
-
+  const body = `
     A request for a shipping label has been made for the following order:
 
     Order ID: ${order.internalOrderId}
@@ -152,9 +117,45 @@ exports.RequestShippingLabelNotification = (emails, order) => {
     Status: ${order.status}
 
     Please review the request and take necessary action to generate or provide the shipping label.
-
-    Best regards,
-    [Your Company Name]
   `;
-  return this.sendEmail(emails, adminBody, subject);
+  return this.sendEmail(emails, body, subject);
+};
+
+exports.UpdateProductStatusNotification = (emails, productInfo) => {
+  const subject = `Product Item Status Updated: ${productInfo.status}`;
+  const body = `
+    The status of your product item has been updated. Please find the details below:
+
+    **Order Details:**
+    - Internal Order ID: ${productInfo.order.internalOrderId}
+    - Customer Order Number: ${productInfo.order.customerOrderNumber}
+
+    **Product Details:**
+    - Product ID: ${productInfo.id}
+    - SKU: ${productInfo.caridSKU}
+    - Description: ${productInfo.description}
+    - Quantity: ${productInfo.orderQty}
+    - Price: $${productInfo.price}
+    - Status: ${productInfo.status}
+
+      Please check the system for more details.
+  `;
+
+  return this.sendEmail(emails, body, subject);
+};
+
+exports.UpdateOrderStatusNotification = (emails, order) => {
+  let subject = `Order Status Updated: ${order.status}`;
+  let body = `
+      The following order status has been updated.
+      Order Details:
+      - Order ID: ${order.internalOrderId}
+      - Customer Order Number: ${order.customerOrderNumber}
+      - Order Total: ${order.orderTotal}
+      - Status: ${order.status}
+
+      Please check the system for more details.
+    `;
+
+  this.sendEmail(emails, body, subject);
 };

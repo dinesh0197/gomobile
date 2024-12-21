@@ -6,6 +6,7 @@ const {
   OrderAssignedNotification,
   RequestShippingLabelNotification,
   OrderCancelledNotification,
+  UpdateOrderStatusNotification,
 } = require("../helper/send-email");
 const Supplier = require("./supplier-management");
 
@@ -140,59 +141,49 @@ Order.afterCreate(async (order, options) => {
 
 Order.beforeUpdate(async (order, options) => {
   try {
-    // Check if `assignedFranchiseId` is being updated and is different
-    if (order.changed("assignedFranchiseId")) {
-      const previousFranchiseId = order.previous("assignedFranchiseId");
-      const newFranchiseId = order.assignedFranchiseId;
+    const adminUsers = await User.findAll({ where: { role: "Admin" } });
+    const adminEmails = adminUsers.map((user) => user?.email).filter(Boolean);
 
-      // Only proceed if the new franchise is different from the current one
-      if (newFranchiseId && newFranchiseId !== previousFranchiseId) {
-        // Notify the new franchise
-        const newFranchise = await User.findOne({
-          where: { id: newFranchiseId },
-        });
-        if (newFranchise && newFranchise.email) {
-          OrderAssignedNotification([newFranchise.email], order, "assigned");
-          console.log("Notification sent to the new franchise (assigned).");
-        }
-      }
-    }
-
-    if (order.status === "Cancelled") {
+    if (
+      order.status === "Cancelled" &&
+      order.status !== order.previous("status")
+    ) {
       const newFranchise = await User.findOne({
         where: { id: order.assignedFranchiseId },
       });
-      const adminUsers = await User.findAll({ where: { role: "Admin" } });
-
-      if (adminUsers.length > 0) {
-        const adminEmails = adminUsers.map((user) => user.email);
-
-        // Send email to admin users with 'admin' type
-        OrderCancelledNotification(adminEmails, order, "Cancelled", "admin");
-
-        // Send email to the franchise user with 'user' type
-        OrderCancelledNotification(
-          [newFranchise.email],
-          order,
-          "Cancelled",
-          "user"
-        );
-      }
+      OrderCancelledNotification(
+        [...adminEmails, newFranchise?.email || ""],
+        order
+      );
     }
 
-    if (order.requestedShippingLabel) {
-      const adminUsers = await User.findAll({ where: { role: "Admin" } });
+    if (
+      order.status !== "Cancelled" &&
+      order.status !== order.previous("status")
+    ) {
+      const newFranchise = await User.findOne({
+        where: { id: order.assignedFranchiseId },
+      });
+      UpdateOrderStatusNotification(
+        [...adminEmails, newFranchise?.email || ""],
+        order
+      );
+    }
 
-      if (adminUsers.length > 0) {
-        const adminEmails = adminUsers.map((user) => user.email);
-        // Send email to admin users with 'admin' type
-        RequestShippingLabelNotification(
-          [...adminEmails, "ajithkumarvs86@gmail.com"],
-          order,
-          "requestedShippingLabel",
-          "admin"
-        );
-      }
+    if (
+      order.requestedShippingLabel &&
+      order.requestedShippingLabel !== order.previous("requestedShippingLabel")
+    ) {
+      const supplierEmail = order?.createdBy
+        ? (
+            await Supplier.findByPk(order.createdBy, {
+              attributes: ["email"],
+              raw: true,
+            })
+          )?.email || ""
+        : "";
+
+      RequestShippingLabelNotification([...adminEmails, supplierEmail], order);
     }
   } catch (error) {
     console.error("Error sending franchise assignment notification:", error);
